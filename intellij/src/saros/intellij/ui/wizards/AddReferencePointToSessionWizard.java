@@ -1,5 +1,6 @@
 package saros.intellij.ui.wizards;
 
+import com.intellij.ide.impl.ProjectUtil;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
@@ -135,10 +136,14 @@ public class AddReferencePointToSessionWizard extends Wizard {
 
           Project project = referencePointSelectionResult.getProject();
 
-          sessionManager.getSession().getComponent(SharedIDEContext.class).setProject(project);
+          // a new project is only bound to the session once doNewDirectory opened it
+          if (project != null) {
+            sessionManager.getSession().getComponent(SharedIDEContext.class).setProject(project);
+          }
 
           switch (referencePointSelectionResult.getLocalRepresentationOption()) {
             case CREATE_NEW_DIRECTORY:
+            case CREATE_NEW_PROJECT:
               String newDirectoryName = referencePointSelectionResult.getNewDirectoryName();
               VirtualFile newDirectoryBaseDirectory =
                   referencePointSelectionResult.getNewDirectoryBaseDirectory();
@@ -179,14 +184,16 @@ public class AddReferencePointToSessionWizard extends Wizard {
 
         /**
          * Creates a new directory for the reference point and starts the resource negotiation with
-         * it.
+         * it. If no project is given, the new directory is opened as a new project first, like
+         * IntelliJ's "New Project" does, and that project is bound to the session.
          *
-         * @param project the project to bind the reference point to
+         * @param project the project to bind the reference point to or <code>null</code> to open
+         *     the new directory as a new project
          * @param directoryName the name for the new directory
          * @param baseDirectory the base directory for the new directory
          */
         private void doNewDirectory(
-            @NotNull Project project,
+            @Nullable Project project,
             @NotNull String directoryName,
             @NotNull VirtualFile baseDirectory) {
 
@@ -246,6 +253,30 @@ public class AddReferencePointToSessionWizard extends Wizard {
                 Messages.AddReferencePointToSessionWizard_directory_creation_failed_title);
 
             return;
+          }
+
+          if (project == null) {
+            project = ProjectUtil.openOrImport(referencePointFile.toNioPath(), null, true);
+
+            if (project == null) {
+              log.error(
+                  "Failed to open the created directory " + referencePointFile + " as project");
+
+              cancelNegotiation(
+                  "Failed to open local representation of shared root directory "
+                      + remoteReferencePointName);
+
+              NotificationPanel.showError(
+                  MessageFormat.format(
+                      Messages.AddReferencePointToSessionWizard_project_open_failed_message,
+                      referencePointFile,
+                      remoteReferencePointName),
+                  Messages.AddReferencePointToSessionWizard_project_open_failed_title);
+
+              return;
+            }
+
+            sessionManager.getSession().getComponent(SharedIDEContext.class).setProject(project);
           }
 
           if (ProjectAPI.isExcluded(project, referencePointFile)) {

@@ -13,6 +13,8 @@ public class Messages {
 
   public static String AddReferencePointToSessionWizard_title;
   public static String AddReferencePointToSessionWizard_directory_creation_failed_title;
+  public static String AddReferencePointToSessionWizard_project_open_failed_title;
+  public static String AddReferencePointToSessionWizard_project_open_failed_message;
   public static String AddReferencePointToSessionWizard_directory_creation_failed_message_condition;
   public static String AddReferencePointToSessionWizard_directory_already_exists_title;
   public static String AddReferencePointToSessionWizard_directory_already_exists_message_condition;
@@ -202,6 +204,7 @@ public class Messages {
   public static String ReferencePointTab_create_new_directory;
   public static String ReferencePointTab_create_new_directory_name;
   public static String ReferencePointTab_create_new_directory_base_path;
+  public static String ReferencePointTab_open_as_new_project;
   public static String ReferencePointTab_directory_base_path_file_chooser_title;
   public static String ReferencePointTab_directory_base_path_file_chooser_description;
   public static String ReferencePointTab_use_existing_directory;

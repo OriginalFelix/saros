@@ -3,7 +3,6 @@ package saros.intellij.ui.tree;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -25,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import saros.core.ui.util.CollaborationUtils;
 import saros.filesystem.IReferencePoint;
 import saros.intellij.context.SharedIDEContext;
+import saros.intellij.editor.ProjectAPI;
 import saros.intellij.filesystem.IntellijReferencePoint;
 import saros.intellij.ui.Messages;
 import saros.intellij.ui.util.IconManager;
@@ -61,7 +61,7 @@ class StartSessionContactPopMenu extends JPopupMenu {
         new JMenu(Messages.StartSessionContactPopMenu_start_session_popup_text);
     menuShareProject.setIcon(IconManager.SESSIONS_ICON);
 
-    for (Project project : ProjectManager.getInstance().getOpenProjects()) {
+    for (Project project : ProjectAPI.getOpenUserProjects()) {
       menuShareProject.add(createProjectMenu(project));
     }
 

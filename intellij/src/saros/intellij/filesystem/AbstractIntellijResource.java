@@ -83,7 +83,20 @@ public abstract class AbstractIntellijResource implements IResource {
 
   @Override
   public boolean isIgnored() {
-    return isGitConfig() || isExcluded();
+    return isGitConfig() || isIdeaConfig() || isExcluded();
+  }
+
+  /**
+   * Returns whether this resource is part of the IntelliJ project configuration directory at the
+   * root of the reference point. It holds local settings that must not be shared, e.g. the one
+   * created when a joined shared directory is opened as a new project.
+   *
+   * @return whether this resource is part of the IntelliJ project configuration directory
+   */
+  private boolean isIdeaConfig() {
+    String path = PathUtils.toPortableString(relativePath);
+
+    return path.startsWith(".idea/") || getType() == FOLDER && path.equals(".idea");
   }
 
   /**

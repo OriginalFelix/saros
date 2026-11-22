@@ -8,9 +8,15 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.fileEditor.TextEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.ex.WelcomeScreenProjectProvider;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import saros.intellij.runtime.EDTExecutor;
@@ -210,5 +216,20 @@ public class ProjectAPI {
    */
   public static void releaseBackgroundEditor(@NotNull Editor editor) {
     EDTExecutor.invokeAndWait(() -> editorFactory.releaseEditor(editor));
+  }
+
+  /**
+   * Returns the open projects the user works in, sorted by name. The hidden project backing the
+   * IntelliJ start screen is left out, as shared files must never be placed in it.
+   *
+   * @return the open projects the user works in
+   */
+  public static List<Project> getOpenUserProjects() {
+    // shortcut: WelcomeScreenProjectProvider is internal API (verifier failureLevel allows it),
+    // switch once IntelliJ offers a public check
+    return Arrays.stream(ProjectManager.getInstance().getOpenProjects())
+        .filter(project -> !WelcomeScreenProjectProvider.Companion.isWelcomeScreenProject(project))
+        .sorted(Comparator.comparing(Project::getName))
+        .collect(Collectors.toList());
   }
 }

@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel
 
 plugins {
     alias(libs.plugins.intellij.platform)
@@ -52,6 +53,16 @@ intellijPlatform {
     }
     buildSearchableOptions = false
     pluginVerification {
+        // internal API is reported but not fatal: the hidden start-screen project can only be
+        // detected through it (ProjectAPI.getOpenUserProjects)
+        failureLevel = listOf(
+            FailureLevel.COMPATIBILITY_PROBLEMS,
+            FailureLevel.SCHEDULED_FOR_REMOVAL_API_USAGES,
+            FailureLevel.OVERRIDE_ONLY_API_USAGES,
+            FailureLevel.NON_EXTENDABLE_API_USAGES,
+            FailureLevel.MISSING_DEPENDENCIES,
+            FailureLevel.INVALID_PLUGIN,
+        )
         ides {
             if (intellijHome.isNotBlank()) local(file(intellijHome)) else recommended()
         }

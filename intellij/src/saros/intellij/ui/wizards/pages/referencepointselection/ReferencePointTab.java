@@ -5,7 +5,6 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.ui.ComboBox;
@@ -14,6 +13,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.SimpleListCellRenderer;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBRadioButton;
 import com.intellij.ui.components.JBTextField;
@@ -27,7 +27,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -35,6 +34,7 @@ import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -70,6 +70,7 @@ class ReferencePointTab {
   private final JRadioButton createNewDirectoryRadioButton;
   private final JTextField newDirectoryNameTextField;
   private final TextFieldWithBrowseButton newDirectoryBasePathTextField;
+  private final JCheckBox openAsNewProjectCheckBox;
   private final JRadioButton useExistingDirectoryRadioButton;
   private final TextFieldWithBrowseButton existingDirectoryPathTextField;
 
@@ -111,6 +112,7 @@ class ReferencePointTab {
 
     this.newDirectoryNameTextField = new JBTextField();
     this.newDirectoryBasePathTextField = new TextFieldWithBrowseButton();
+    this.openAsNewProjectCheckBox = new JBCheckBox();
     this.existingDirectoryPathTextField = new TextFieldWithBrowseButton();
 
     this.newDirectoryNameTextFieldShownAsValid = true;
@@ -146,6 +148,7 @@ class ReferencePointTab {
     setInitialInput();
 
     addProjectComboBoxListener();
+    addOpenAsNewProjectListener();
     addCreateNewDirectoryFieldListeners();
     addUseExistingDirectoryFieldListeners();
   }
@@ -154,16 +157,10 @@ class ReferencePointTab {
    * Fills the project combo box with all open projects of the current Intellij application and
    * clears the default selection. The projects are sorted alphabetically.
    *
-   * @see ProjectManager#getOpenProjects()
+   * @see ProjectAPI#getOpenUserProjects()
    */
   private void fillProjectComboBox() {
-    Project[] projects = ProjectManager.getInstance().getOpenProjects();
-
-    Arrays.sort(projects, Comparator.comparing(Project::getName));
-
-    for (Project project : projects) {
-      projectComboBox.addItem(project);
-    }
+    ProjectAPI.getOpenUserProjects().forEach(projectComboBox::addItem);
 
     projectComboBox.setSelectedIndex(-1);
   }
@@ -200,6 +197,8 @@ class ReferencePointTab {
               throw new IllegalStateException("Encountered unknown radio button selection.");
           }
 
+          projectComboBox.setEnabled(!isNewProjectSelected());
+
           updateNewDirectoryNameValidityIndicator();
           updateNewBaseDirectoryValidityIndicator();
           updateExistingDirectoryValidityIndicator();
@@ -220,6 +219,41 @@ class ReferencePointTab {
   private void setCreateNewDirectoryFieldsEnabled(boolean enabled) {
     newDirectoryNameTextField.setEnabled(enabled);
     newDirectoryBasePathTextField.setEnabled(enabled);
+    openAsNewProjectCheckBox.setEnabled(enabled);
+  }
+
+  /**
+   * Returns whether the user chose to create the new directory and open it as a new project.
+   *
+   * @return whether the user chose to create the new directory and open it as a new project
+   */
+  private boolean isNewProjectSelected() {
+    return createNewDirectoryRadioButton.isSelected() && openAsNewProjectCheckBox.isSelected();
+  }
+
+  /**
+   * Registers a listener with the "open as new project" check box. Choosing it frees the base path
+   * from the project content and proposes IntelliJ's default location for new projects.
+   */
+  private void addOpenAsNewProjectListener() {
+    openAsNewProjectCheckBox.addItemListener(
+        itemEvent -> {
+          projectComboBox.setEnabled(!isNewProjectSelected());
+
+          Project project = (Project) projectComboBox.getSelectedItem();
+          VirtualFile projectBaseDir =
+              project == null ? null : ProjectUtil.guessProjectDir(project);
+
+          if (openAsNewProjectCheckBox.isSelected()) {
+            newDirectoryBasePathTextField.setText(com.intellij.ide.impl.ProjectUtil.getBaseDir());
+          } else if (projectBaseDir != null) {
+            newDirectoryBasePathTextField.setText(projectBaseDir.getPath());
+          }
+
+          updateNewDirectoryNameValidityIndicator();
+          updateNewBaseDirectoryValidityIndicator();
+          updateInputValidity();
+        });
   }
 
   /**
@@ -290,7 +324,15 @@ class ReferencePointTab {
 
     if (projectCount > 0) {
       setInitialInputForProject(projectComboBox.getItemAt(0), null);
+
+      return;
     }
+
+    // no project is open, so the only option is to create one (listeners are not registered yet)
+    newDirectoryNameTextField.setText(referencePointName);
+    newDirectoryBasePathTextField.setText(com.intellij.ide.impl.ProjectUtil.getBaseDir());
+    openAsNewProjectCheckBox.setSelected(true);
+    createNewDirectoryRadioButton.doClick();
   }
 
   /**
@@ -519,7 +561,10 @@ class ReferencePointTab {
   private void updateInputValidity() {
     boolean newInputValidityState;
 
-    if (projectComboBox.getSelectedItem() == null) {
+    if (isNewProjectSelected()) {
+      newInputValidityState = hasValidNewDirectoryName() && hasValidNewBasePath();
+
+    } else if (projectComboBox.getSelectedItem() == null) {
       newInputValidityState = false;
 
     } else if (createNewDirectoryRadioButton.isSelected()) {
@@ -599,7 +644,8 @@ class ReferencePointTab {
       return false;
     }
 
-    return representsValidVirtualFile(newBasePathFile);
+    // a new project can be created anywhere; otherwise the directory must be in the project
+    return isNewProjectSelected() || representsValidVirtualFile(newBasePathFile);
   }
 
   /**
@@ -755,7 +801,9 @@ class ReferencePointTab {
   ReferencePointSelectionResult getReferencePointSelectionResult() {
     LocalRepresentationOption chosenLocalRepresentationOption;
 
-    if (createNewDirectoryRadioButton.isSelected()) {
+    if (isNewProjectSelected()) {
+      chosenLocalRepresentationOption = LocalRepresentationOption.CREATE_NEW_PROJECT;
+    } else if (createNewDirectoryRadioButton.isSelected()) {
       chosenLocalRepresentationOption = LocalRepresentationOption.CREATE_NEW_DIRECTORY;
     } else if (useExistingDirectoryRadioButton.isSelected()) {
       chosenLocalRepresentationOption = LocalRepresentationOption.USE_EXISTING_DIRECTORY;
@@ -764,9 +812,10 @@ class ReferencePointTab {
           "Encountered a state where neither of the two radio buttons was selected.");
     }
 
-    Project project = (Project) projectComboBox.getSelectedItem();
+    // a new project only exists once the wizard opened it
+    Project project = isNewProjectSelected() ? null : (Project) projectComboBox.getSelectedItem();
 
-    if (project == null) {
+    if (project == null && !isNewProjectSelected()) {
       throw new IllegalStateException("Encountered a state where no project was selected.");
     }
 
@@ -916,6 +965,17 @@ class ReferencePointTab {
 
     referencePointTabPanel.add(newDirectoryBasePathTextField, gbc);
 
+    gbc.gridy++;
+
+    referencePointTabPanel.add(Box.createHorizontalStrut(5), gbc);
+
+    gbc.gridwidth = 2;
+
+    openAsNewProjectCheckBox.setText(Messages.ReferencePointTab_open_as_new_project);
+
+    referencePointTabPanel.add(openAsNewProjectCheckBox, gbc);
+
+    gbc.gridwidth = 1;
     gbc.gridy++;
   }
 

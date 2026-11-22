@@ -19,14 +19,15 @@ public class ReferencePointSelectionResult {
    * <p>Depending on the chosen sharing mode, different values can be null.
    *
    * @param localRepresentationOption the mode that was chosen
-   * @param project the project to use
+   * @param project the project to use; <code>null</code> for {@link
+   *     LocalRepresentationOption#CREATE_NEW_PROJECT}, as that project is only opened afterwards
    * @param newDirectoryName the chose name for the new directory to create
    * @param newDirectoryBaseDirectory the chose base directory of the new directory to create
    * @param existingDirectory the existing directory to use
    */
   ReferencePointSelectionResult(
       @NotNull LocalRepresentationOption localRepresentationOption,
-      @NotNull Project project,
+      @Nullable Project project,
       @Nullable String newDirectoryName,
       @Nullable VirtualFile newDirectoryBaseDirectory,
       @Nullable VirtualFile existingDirectory) {
@@ -51,9 +52,10 @@ public class ReferencePointSelectionResult {
   /**
    * Returns the chosen project to use for the shared reference point.
    *
-   * @return the chosen project to use for the shared reference point
+   * @return the chosen project to use for the shared reference point or <code>null</code> if a new
+   *     project should be created
    */
-  @NotNull
+  @Nullable
   public Project getProject() {
     return project;
   }
