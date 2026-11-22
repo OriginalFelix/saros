@@ -48,10 +48,10 @@ public class User {
   }
 
   /**
-   * @deprecated Will be replaced. Do not use this method in new code.
-   * @return
+   * Returns the JID that identifies this user in the session.
+   *
+   * @return the JID of this user
    */
-  @Deprecated
   public JID getJID() {
     return jid;
   }

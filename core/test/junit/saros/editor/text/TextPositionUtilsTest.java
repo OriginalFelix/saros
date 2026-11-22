@@ -4,13 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static saros.editor.text.TextPositionUtils.UNIX_LINE_SEPARATOR;
 import static saros.editor.text.TextPositionUtils.WINDOWS_LINE_SEPARATOR;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Test;
 import saros.concurrent.jupiter.internal.text.GOTOInclusionTransformation;
+import saros.util.CoreUtils;
 
 public class TextPositionUtilsTest {
 
@@ -72,8 +72,8 @@ public class TextPositionUtilsTest {
             UNIX_TEST_STRING.substring(newLineOffset - UNIX_LINE_SEPARATOR.length(), newLineOffset);
         assertEquals(
             "line offset " + newLineOffset + " is not correct",
-            StringEscapeUtils.escapeJava(UNIX_LINE_SEPARATOR),
-            StringEscapeUtils.escapeJava(chars));
+            CoreUtils.escapeForLog(UNIX_LINE_SEPARATOR),
+            CoreUtils.escapeForLog(chars));
       }
     }
 
@@ -90,8 +90,8 @@ public class TextPositionUtilsTest {
                 newLineOffset - WINDOWS_LINE_SEPARATOR.length(), newLineOffset);
         assertEquals(
             "line offset " + newLineOffset + " is not correct",
-            StringEscapeUtils.escapeJava(WINDOWS_LINE_SEPARATOR),
-            StringEscapeUtils.escapeJava(chars));
+            CoreUtils.escapeForLog(WINDOWS_LINE_SEPARATOR),
+            CoreUtils.escapeForLog(chars));
       }
     }
 

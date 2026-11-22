@@ -8,8 +8,8 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.fileEditor.TextEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -91,8 +91,13 @@ public class ProjectAPI {
 
     return EDTExecutor.invokeAndWait(
         () ->
-            fileEditorManager.openTextEditor(
-                new OpenFileDescriptor(project, virtualFile), activate));
+            fileEditorManager
+                .openFileEditor(new OpenFileDescriptor(project, virtualFile), activate)
+                .stream()
+                .filter(TextEditor.class::isInstance)
+                .map(fileEditor -> ((TextEditor) fileEditor).getEditor())
+                .findFirst()
+                .orElse(null));
   }
 
   /**

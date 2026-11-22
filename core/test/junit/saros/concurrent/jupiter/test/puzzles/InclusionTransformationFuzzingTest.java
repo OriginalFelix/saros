@@ -5,7 +5,6 @@ import static saros.test.util.OperationHelper.EOL;
 
 import java.util.Objects;
 import java.util.Random;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -20,6 +19,7 @@ import saros.concurrent.jupiter.test.util.TwoWayJupiterClientDocument;
 import saros.concurrent.jupiter.test.util.TwoWayJupiterServerDocument;
 import saros.editor.text.TextPosition;
 import saros.editor.text.TextPositionUtils;
+import saros.util.CoreUtils;
 
 /**
  * Tests the inclusion transformation using randomly generated operations. As the test is not
@@ -131,7 +131,7 @@ public class InclusionTransformationFuzzingTest extends JupiterTestCase {
               + ") - op count: "
               + lastTime
               + " - document content: "
-              + StringEscapeUtils.escapeJava(server.getDocument()));
+              + CoreUtils.escapeForLog(server.getDocument()));
     }
   }
 

@@ -3,8 +3,6 @@ package saros.activities;
 import static saros.util.LineSeparatorNormalizationUtil.NORMALIZED_LINE_SEPARATOR;
 
 import java.util.Objects;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import saros.concurrent.jupiter.Operation;
@@ -16,6 +14,7 @@ import saros.editor.text.TextPosition;
 import saros.editor.text.TextPositionUtils;
 import saros.filesystem.IFile;
 import saros.session.User;
+import saros.util.CoreUtils;
 import saros.util.LineSeparatorNormalizationUtil;
 
 /**
@@ -209,8 +208,8 @@ public class TextEditActivity extends AbstractResourceActivity<IFile> {
 
   @Override
   public String toString() {
-    String newText = StringEscapeUtils.escapeJava(StringUtils.abbreviate(this.newText, 150));
-    String oldText = StringEscapeUtils.escapeJava(StringUtils.abbreviate(replacedText, 150));
+    String newText = CoreUtils.abbreviateForLog(this.newText);
+    String oldText = CoreUtils.abbreviateForLog(replacedText);
     return "TextEditActivity(start: "
         + startPosition
         + ", new text line delta: "

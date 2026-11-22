@@ -3,6 +3,7 @@ package saros.util;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import saros.net.util.XMPPUtils;
 import saros.net.xmpp.JID;
 import saros.session.User;
@@ -96,5 +97,38 @@ public class CoreUtils {
   public static String determineUserDisplayName(User user) {
     JID jid = user.getJID();
     return XMPPUtils.getNickname(null, jid, jid.getBase());
+  }
+
+  /**
+   * Shortens the given text to 150 characters and escapes it like {@link #escapeForLog(String)}.
+   *
+   * @param text the text to shorten, may be <code>null</code>
+   * @return the shortened and escaped text or <code>null</code> if the text is <code>null</code>
+   */
+  public static String abbreviateForLog(String text) {
+    return escapeForLog(StringUtils.abbreviate(text, 150));
+  }
+
+  /**
+   * Escapes backslashes, quotes and control characters, so the text fits on one log line.
+   *
+   * @param text the text to escape, may be <code>null</code>
+   * @return the escaped text or <code>null</code> if the text is <code>null</code>
+   */
+  public static String escapeForLog(String text) {
+    if (text == null) return null;
+
+    StringBuilder escaped = new StringBuilder(text.length());
+
+    for (char c : text.toCharArray()) {
+      if (c == '\n') escaped.append("\\n");
+      else if (c == '\r') escaped.append("\\r");
+      else if (c == '\t') escaped.append("\\t");
+      else if (c == '\\' || c == '"') escaped.append('\\').append(c);
+      else if (Character.isISOControl(c)) escaped.append(String.format("\\u%04x", (int) c));
+      else escaped.append(c);
+    }
+
+    return escaped.toString();
   }
 }
