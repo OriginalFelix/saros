@@ -1,7 +1,6 @@
 package saros.intellij.context;
 
 import com.intellij.openapi.application.ApplicationInfo;
-import saros.intellij.SarosComponent;
 
 /**
  * Methods in this class can be used to access version information about the running Intellij IDEA
