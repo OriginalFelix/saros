@@ -1,15 +1,12 @@
 package saros.intellij.editor.annotations;
 
-import static com.intellij.openapi.editor.colors.EditorColors.CARET_COLOR;
 import static saros.intellij.editor.annotations.AnnotationHighlighterLayers.CARET_HIGHLIGHTER_LAYER;
 import static saros.intellij.editor.annotations.AnnotationHighlighterLayers.SELECTION_HIGHLIGHTER_LAYER;
 
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
-import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.editor.markup.TextAttributes;
-import java.awt.Color;
 import java.util.Collections;
 import java.util.List;
 import org.apache.log4j.Logger;
@@ -44,6 +41,9 @@ class SelectionAnnotation extends AbstractEditorAnnotation {
    * editor reference is not <code>null</code>.
    */
   private RangeHighlighter caretHighlighter;
+
+  /** The renderer drawing the caret and the user name; set together with the caret highlighter. */
+  private RemoteCaretRenderer caretRenderer;
 
   /**
    * Creates a selection annotation with the given parameters.
@@ -203,7 +203,11 @@ class SelectionAnnotation extends AbstractEditorAnnotation {
 
     if (caretHighlighter == null) {
       log.warn("Could not create caret highlighter for position " + caretPosition + " for " + this);
+      return;
     }
+
+    caretRenderer = new RemoteCaretRenderer(user);
+    caretHighlighter.setCustomRenderer(caretRenderer);
   }
 
   /**
@@ -217,9 +221,7 @@ class SelectionAnnotation extends AbstractEditorAnnotation {
     Editor editor = getEditor();
 
     if (editor != null) {
-      removeRangeHighlighter(editor, caretHighlighter);
-
-      caretHighlighter = null;
+      removeCaretHighlighter(editor);
     }
 
     super.removeLocalRepresentation();
@@ -231,7 +233,7 @@ class SelectionAnnotation extends AbstractEditorAnnotation {
 
     if (caretHighlighter != null && caretHighlighter.isValid()) {
       if (editor != null) {
-        removeRangeHighlighter(editor, caretHighlighter);
+        removeCaretHighlighter(editor);
 
       } else {
         log.warn(
@@ -265,30 +267,27 @@ class SelectionAnnotation extends AbstractEditorAnnotation {
     return editor.getColorsScheme().getAttributes(highlightColorKey);
   }
 
+  private void removeCaretHighlighter(@NotNull Editor editor) {
+    removeRangeHighlighter(editor, caretHighlighter);
+
+    if (caretRenderer != null) {
+      caretRenderer.repaintLabel(editor);
+    }
+
+    caretHighlighter = null;
+    caretRenderer = null;
+  }
+
   /**
-   * Returns the text attributes for caret annotation range highlighters.
-   *
-   * <p>Caret annotations are mimicking a real caret in the local editor by adding a zero-width
-   * range highlighter only consisting of a colored border.
-   *
-   * <p>The color of the caret range highlighter is determined by the caret color in the local
-   * editor.
+   * Returns the text attributes for caret annotation range highlighters. They are empty as the
+   * caret is drawn by {@link RemoteCaretRenderer}.
    *
    * @param editor the editor of the annotation
    * @param user the user of the annotation
    * @return the text attributes for caret annotation range highlighters
    */
   private static TextAttributes getCaretTextAttributes(@NotNull Editor editor, @NotNull User user) {
-    ColorKeys colorKeys = ColorManager.getColorKeys(user.getColorID());
-    TextAttributesKey highlightColorKey = colorKeys.getSelectionColorKey();
-    TextAttributes defaultTextAttributes =
-        editor.getColorsScheme().getAttributes(highlightColorKey);
-
-    int font = defaultTextAttributes.getFontType();
-
-    Color caretColor = editor.getColorsScheme().getColor(CARET_COLOR);
-
-    return new TextAttributes(null, null, caretColor, EffectType.BOXED, font);
+    return new TextAttributes();
   }
 
   @Override
