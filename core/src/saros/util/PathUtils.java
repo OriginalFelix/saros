@@ -100,7 +100,8 @@ public class PathUtils {
   public static Path normalize(Path path) {
     Objects.requireNonNull(path, "The given path must not be null");
 
-    if (path.isAbsolute()) {
+    // getRoot() also catches root-relative Windows paths like "C:foo" or "\foo"
+    if (path.isAbsolute() || path.getRoot() != null) {
       throw new IllegalArgumentException("The given path must not be absolute - path: " + path);
     }
 
