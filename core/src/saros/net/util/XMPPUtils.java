@@ -4,20 +4,10 @@ import gnu.inet.encoding.Stringprep;
 import gnu.inet.encoding.StringprepException;
 import java.util.Iterator;
 import org.apache.log4j.Logger;
-import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.Connection;
-import org.jivesoftware.smack.PacketCollector;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.SmackConfiguration;
-import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.filter.AndFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
-import org.jivesoftware.smack.filter.PacketIDFilter;
-import org.jivesoftware.smack.filter.PacketTypeFilter;
-import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.packet.Registration;
 import org.jivesoftware.smackx.Form;
 import org.jivesoftware.smackx.FormField;
 import org.jivesoftware.smackx.ReportedData;
@@ -85,77 +75,6 @@ public class XMPPUtils {
     return alternative;
   }
 
-  public static String getDisplayableName(RosterEntry entry) {
-    String nickName = entry.getName();
-    if (nickName != null && nickName.trim().length() > 0) {
-      return nickName.trim();
-    }
-    return entry.getUser();
-  }
-
-  /**
-   * Creates the given account on the given XMPP server.
-   *
-   * @blocking
-   * @param server the server on which to create the account
-   * @param username for the new account
-   * @param password for the new account
-   * @return <code>null</code> if the account was registered, otherwise a {@link Registration
-   *     description} is returned which may containing additional information on how to register an
-   *     account on the given XMPP server or an error code
-   * @see Registration#getError()
-   * @throws XMPPException exception that occurs while registering
-   */
-  public static Registration createAccount(String server, String username, String password)
-      throws XMPPException {
-
-    Connection connection = new XMPPConnection(server);
-
-    try {
-      connection.connect();
-
-      Registration registration = getRegistrationInfo(connection, username);
-
-      /*
-       * TODO registration cannot be null, can it?
-       */
-      if (registration != null) {
-
-        // no in band registration
-        if (registration.getError() != null) return registration;
-
-        // already registered
-        if (registration.getAttributes().containsKey("registered")) return registration;
-
-        // redirect
-        if (registration.getAttributes().size() == 1
-            && registration.getAttributes().containsKey("instructions")) return registration;
-      }
-
-      AccountManager manager = connection.getAccountManager();
-      manager.createAccount(username, password);
-    } finally {
-      connection.disconnect();
-    }
-
-    return null;
-  }
-
-  /**
-   * Removes given contact from the {@link Roster}.
-   *
-   * @blocking
-   * @param rosterEntry the contact that is to be removed
-   * @throws XMPPException is thrown if no connection is established.
-   */
-  public static void removeFromRoster(Connection connection, RosterEntry rosterEntry)
-      throws XMPPException {
-    if (!connection.isConnected()) {
-      throw new XMPPException("Not connected");
-    }
-    connection.getRoster().removeEntry(rosterEntry);
-  }
-
   /**
    * Returns whether the given JID can be found on the server.
    *
@@ -177,46 +96,6 @@ public class XMPPUtils {
     }
 
     return discovered;
-  }
-
-  /**
-   * Retrieve XMPP Registration information from a server.
-   *
-   * <p>This implementation reuses code from Smack but also sets the from element of the IQ-Packet
-   * so that the server could reply with information that the account already exists as given by
-   * XEP-0077.
-   *
-   * <p>To see what additional information can be queried from the registration object, refer to the
-   * XEP directly:
-   *
-   * <p>http://xmpp.org/extensions/xep-0077.html
-   */
-  public static synchronized Registration getRegistrationInfo(
-      Connection connection, String toRegister) throws XMPPException {
-    Registration reg = new Registration();
-    reg.setTo(connection.getServiceName());
-    reg.setFrom(toRegister);
-    PacketFilter filter =
-        new AndFilter(new PacketIDFilter(reg.getPacketID()), new PacketTypeFilter(IQ.class));
-    PacketCollector collector = connection.createPacketCollector(filter);
-
-    final IQ result;
-
-    try {
-      connection.sendPacket(reg);
-      result = (IQ) collector.nextResult(SmackConfiguration.getPacketReplyTimeout());
-
-    } finally {
-      collector.cancel();
-    }
-
-    if (result == null) {
-      throw new XMPPException("No response from server.");
-    } else if (result.getType() == IQ.Type.ERROR) {
-      throw new XMPPException(result.getError());
-    } else {
-      return (Registration) result;
-    }
   }
 
   /**
@@ -280,46 +159,6 @@ public class XMPPUtils {
           || entityID.startsWith("users.")
           || entityID.startsWith("jud.")
           || entityID.startsWith("id.")) return entityID;
-    }
-
-    return null;
-  }
-
-  /**
-   * Returns the service for multiuser chat.
-   *
-   * @return the service for the multiuser chat or <code>null</code> if it could not be determined
-   */
-  public static String getMultiUserChatService() {
-    Connection connection = defaultConnectionService.getConnection();
-    String service = connection.getServiceName();
-
-    ServiceDiscoveryManager manager = ServiceDiscoveryManager.getInstanceFor(connection);
-
-    DiscoverItems items;
-
-    try {
-      items = manager.discoverItems(service);
-    } catch (XMPPException e) {
-      log.error("discovery for service '" + service + "' failed", e);
-      return null;
-    }
-
-    Iterator<DiscoverItems.Item> iter = items.getItems();
-    while (iter.hasNext()) {
-      DiscoverItems.Item item = iter.next();
-      try {
-        Iterator<Identity> identities = manager.discoverInfo(item.getEntityID()).getIdentities();
-        while (identities.hasNext()) {
-          Identity identity = identities.next();
-          if ("text".equalsIgnoreCase(identity.getType())
-              && "conference".equalsIgnoreCase(identity.getCategory())) {
-            return item.getEntityID();
-          }
-        }
-      } catch (XMPPException e) {
-        log.warn("could not query identity: " + item.getEntityID(), e);
-      }
     }
 
     return null;
