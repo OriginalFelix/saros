@@ -1,11 +1,17 @@
+import org.apache.tools.ant.filters.ReplaceTokens
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("org.jetbrains.intellij.platform") version "2.20.1"
+    alias(libs.plugins.intellij.platform)
 }
 
-val versionQualifier = ext.get("versionQualifier") as String
-val intellijHome = ext.get("intellijHome") as String
+/*
+ * -PintellijHome=<path> (or INTELLIJ_HOME) builds against a local IntelliJ installation.
+ * -PversionQualifier=<qualifier> appends a qualifier to the plugin version.
+ */
+val intellijHome =
+    providers.gradleProperty("intellijHome").orElse(providers.environmentVariable("INTELLIJ_HOME")).getOrElse("")
+val versionQualifier = providers.gradleProperty("versionQualifier").map { if (it.isBlank()) "" else ".$it" }.getOrElse("")
 val pluginVersion = "0.4.0$versionQualifier"
 
 repositories {
@@ -55,8 +61,10 @@ intellijPlatform {
 
 tasks {
     processResources {
-        inputs.property("pluginVersion", pluginVersion)
-        filesMatching("saros.properties") { filter { it.replace("@pluginVersion@", pluginVersion) } }
+        // a local copy, so the action does not capture the script (configuration cache)
+        val tokens = mapOf("pluginVersion" to pluginVersion)
+        inputs.properties(tokens)
+        filesMatching("saros.properties") { filter<ReplaceTokens>("tokens" to tokens) }
     }
 
     jar {
