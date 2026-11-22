@@ -9,9 +9,7 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.openapi.ui.FixedSizeButton;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.util.ui.UIUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.JBColor;
@@ -24,8 +22,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.File;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -243,8 +239,8 @@ class ReferencePointTab {
    * field is used as the default selection when the folder chooser is opened by the user.
    *
    * <p>Sets the text fields to not be editable to avoid issues with {@link
-   * #representsValidVirtualFile(File)}. Adds a mouse listener to ensure that the directory chooser
-   * is opened instead when the text field is clicked.
+   * #representsValidVirtualFile(File)}. The folder chooser is opened via the browse icon of the
+   * text field.
    */
   private void setUpFolderChooser() {
     newDirectoryBasePathTextField.addBrowseFolderListener(
@@ -255,17 +251,6 @@ class ReferencePointTab {
                 Messages.ReferencePointTab_directory_base_path_file_chooser_description));
 
     newDirectoryBasePathTextField.setEditable(false);
-    newDirectoryBasePathTextField
-        .getTextField()
-        .addMouseListener(
-            (MouseClickedListener)
-                e -> {
-                  // only act on left click and filter out events where browse button was clicked
-                  if (e.getButton() == MouseEvent.BUTTON1 && e.getComponent().hasFocus()) {
-                    UIUtil.findComponentOfType(newDirectoryBasePathTextField, FixedSizeButton.class)
-                        .doClick();
-                  }
-                });
 
     existingDirectoryPathTextField.addBrowseFolderListener(
         null,
@@ -275,18 +260,6 @@ class ReferencePointTab {
                 Messages.ReferencePointTab_existing_directory_path_file_chooser_description));
 
     existingDirectoryPathTextField.setEditable(false);
-    existingDirectoryPathTextField
-        .getTextField()
-        .addMouseListener(
-            (MouseClickedListener)
-                e -> {
-                  // only act on left click and filter out events where browse button was clicked
-                  if (e.getButton() == MouseEvent.BUTTON1 && e.getComponent().hasFocus()) {
-                    UIUtil.findComponentOfType(
-                            existingDirectoryPathTextField, FixedSizeButton.class)
-                        .doClick();
-                  }
-                });
   }
 
   /**
@@ -981,28 +954,5 @@ class ReferencePointTab {
   private void initSpacers(@NotNull GridBagConstraints gbc) {
     gbc.gridwidth = 3;
     referencePointTabPanel.add(Box.createHorizontalStrut(600), gbc);
-  }
-
-  /** Interface extension adding stubs for all methods besides {@link #mouseClicked(MouseEvent)}. */
-  private interface MouseClickedListener extends MouseListener {
-    @Override
-    default void mousePressed(MouseEvent e) {
-      // NOP
-    }
-
-    @Override
-    default void mouseReleased(MouseEvent e) {
-      // NOP
-    }
-
-    @Override
-    default void mouseEntered(MouseEvent e) {
-      // NOP
-    }
-
-    @Override
-    default void mouseExited(MouseEvent e) {
-      // NOP
-    }
   }
 }
