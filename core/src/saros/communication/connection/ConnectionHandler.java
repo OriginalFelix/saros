@@ -1,5 +1,6 @@
 package saros.communication.connection;
 
+import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -290,7 +291,8 @@ public class ConnectionHandler {
   }
 
   private ConnectionConfiguration createConnectionConfiguration(
-      String domain, String server, int port, boolean useTLS, boolean useSASL) {
+      String domain, String server, int port, boolean useTLS, boolean useSASL)
+      throws GeneralSecurityException {
 
     ConnectionConfiguration connectionConfiguration = null;
     if (server.isEmpty()) connectionConfiguration = new ConnectionConfiguration(domain);
@@ -298,8 +300,13 @@ public class ConnectionHandler {
 
     connectionConfiguration.setSASLAuthenticationEnabled(useSASL);
 
-    if (!useTLS)
+    if (useTLS) {
+      // fail instead of falling back to plaintext when STARTTLS is missing or stripped
+      connectionConfiguration.setSecurityMode(ConnectionConfiguration.SecurityMode.required);
+      connectionConfiguration.setCustomSSLContext(XMPPTrustManager.createSSLContext(domain));
+    } else {
       connectionConfiguration.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
+    }
 
     connectionConfiguration.setReconnectionAllowed(false);
 
