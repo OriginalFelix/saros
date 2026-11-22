@@ -171,7 +171,7 @@ public class VersionManagerTest {
     VersionCompatibilityResult result =
         versionManagerLocal.determineVersionCompatibility(bobContact);
 
-    assertEquals(Compatibility.QUALIFIER_MISMATCH, result.getCompatibility());
+    assertEquals(Compatibility.OK, result.getCompatibility());
   }
 
   @Test
@@ -184,6 +184,32 @@ public class VersionManagerTest {
     VersionCompatibilityResult result =
         versionManagerLocal.determineVersionCompatibility(bobContact);
 
-    assertEquals(Compatibility.QUALIFIER_MISMATCH, result.getCompatibility());
+    assertEquals(Compatibility.OK, result.getCompatibility());
+  }
+
+  @Test
+  public void testReleaseCompatibleWithDevBuild() {
+    Version local = Version.parseVersion("0.4.0");
+    Version remote = Version.parseVersion("0.4.1.DEV-0acfbbf9bc");
+
+    init(local, remote);
+
+    VersionCompatibilityResult result =
+        versionManagerLocal.determineVersionCompatibility(bobContact);
+
+    assertEquals(Compatibility.OK, result.getCompatibility());
+  }
+
+  @Test
+  public void testDevBuildWithOlderMinorVersion() {
+    Version local = Version.parseVersion("0.3.9.DEV-abc");
+    Version remote = Version.parseVersion("0.4.0");
+
+    init(local, remote);
+
+    VersionCompatibilityResult result =
+        versionManagerLocal.determineVersionCompatibility(bobContact);
+
+    assertEquals(Compatibility.OLDER, result.getCompatibility());
   }
 }

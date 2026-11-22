@@ -3,7 +3,6 @@ package saros.versioning;
 import static saros.versioning.Compatibility.NEWER;
 import static saros.versioning.Compatibility.OK;
 import static saros.versioning.Compatibility.OLDER;
-import static saros.versioning.Compatibility.QUALIFIER_MISMATCH;
 import static saros.versioning.Compatibility.UNKNOWN;
 
 import java.util.Objects;
@@ -111,22 +110,13 @@ public class Version {
   /**
    * Returns the compatibility result from comparing this version to the given version.
    *
-   * <p>For determining compatibility, only the major and minor version numbers are checked if no
-   * qualifier is given for both versions. Differences in micro version number are always seen as
-   * compatible in such cases.
-   *
-   * <p>If at least one of the compared versions contains a qualifier, the two versions have to
-   * match completely (including the micro version number and the qualifier) to be seen as
-   * compatible.
+   * <p>Only the major and minor version numbers are compared. Versions that differ only in the
+   * micro version number or the qualifier (e.g. a release and a dev build) are compatible.
    *
    * @param other the version to compare against
    * @return the compatibility result from comparing this version to the given version
    */
   Compatibility determineCompatibilityWith(Version other) {
-    if (!this.qualifier.isEmpty() || !other.qualifier.isEmpty()) {
-      return this.equals(other) ? OK : QUALIFIER_MISMATCH;
-    }
-
     int result;
 
     result = major - other.major;
