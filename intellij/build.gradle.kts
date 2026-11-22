@@ -1,4 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
@@ -62,9 +61,9 @@ intellijPlatform {
 tasks {
     processResources {
         // a local copy, so the action does not capture the script (configuration cache)
-        val tokens = mapOf("pluginVersion" to pluginVersion)
-        inputs.properties(tokens)
-        filesMatching("saros.properties") { filter<ReplaceTokens>("tokens" to tokens) }
+        val version = pluginVersion
+        inputs.property("pluginVersion", version)
+        filesMatching("saros.properties") { filter { it.replace("@pluginVersion@", version) } }
     }
 
     jar {

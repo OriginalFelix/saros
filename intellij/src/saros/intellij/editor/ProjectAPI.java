@@ -91,13 +91,8 @@ public class ProjectAPI {
 
     return EDTExecutor.invokeAndWait(
         () ->
-            fileEditorManager
-                .openFileEditor(new OpenFileDescriptor(project, virtualFile), activate)
-                .stream()
-                .filter(TextEditor.class::isInstance)
-                .map(fileEditor -> ((TextEditor) fileEditor).getEditor())
-                .findFirst()
-                .orElse(null));
+            fileEditorManager.openTextEditor(
+                new OpenFileDescriptor(project, virtualFile), activate));
   }
 
   /**
