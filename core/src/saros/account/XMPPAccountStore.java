@@ -8,6 +8,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -182,6 +185,18 @@ public final class XMPPAccountStore {
     log.debug("loaded " + accounts.size() + " account(s)");
   }
 
+  /**
+   * The account data is only obfuscated (the key is the OS user name), so at least keep other local
+   * users from reading it. No-op on file systems without POSIX permissions (Windows user profiles
+   * are already private).
+   */
+  static void restrictToOwner(File file) throws IOException {
+    PosixFileAttributeView view =
+        Files.getFileAttributeView(file.toPath(), PosixFileAttributeView.class);
+
+    if (view != null) view.setPermissions(PosixFilePermissions.fromString("rw-------"));
+  }
+
   private synchronized void saveAccounts() {
 
     if (accountFile == null) return;
@@ -202,6 +217,7 @@ public final class XMPPAccountStore {
     FileOutputStream dataOut = null;
 
     try {
+      restrictToOwner(accountFile);
       dataOut = new FileOutputStream(accountFile);
       // use a pair in order to create a artificial xml root node
       ArrayList<XMPPAccount> accountsToSave = new ArrayList<>(accounts);
