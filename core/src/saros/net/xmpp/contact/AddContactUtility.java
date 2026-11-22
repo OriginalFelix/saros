@@ -5,6 +5,7 @@ import java.util.function.BiPredicate;
 import org.apache.log4j.Logger;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.XMPPError;
 import saros.SarosConstants;
 import saros.exceptions.OperationCanceledException;
 import saros.net.util.XMPPUtils;
@@ -29,8 +30,8 @@ import saros.net.xmpp.XMPPConnectionService;
 class AddContactUtility {
   private static final Logger log = Logger.getLogger(AddContactUtility.class);
 
-  private static final class DialogContent {
-    private final String dialogTitle;
+  static final class DialogContent {
+    final String dialogTitle;
     private final String dialogMessage;
     private final String invocationTargetExceptionMessage;
 
@@ -97,10 +98,24 @@ class AddContactUtility {
     }
   }
 
-  private static DialogContent getDialogContent(XMPPException e) {
-    // FIXME: use e.getXMPPError().getCode(); !
+  private static final int NO_CODE = -2;
 
-    if (e.getMessage().contains("item-not-found")) {
+  /**
+   * Returns whether the exception carries the given RFC 6120 error condition or, for older servers,
+   * the given legacy error code (-1 means "no code" in Smack, so NO_CODE never matches).
+   */
+  private static boolean hasError(XMPPException e, String condition, int legacyCode) {
+    XMPPError error = e.getXMPPError();
+
+    if (error != null)
+      return condition.equals(error.getCondition()) || error.getCode() == legacyCode;
+
+    return String.valueOf(e.getMessage()).contains(condition);
+  }
+
+  static DialogContent getDialogContent(XMPPException e) {
+
+    if (hasError(e, "item-not-found", NO_CODE)) {
       return new DialogContent(
           "Contact Unknown",
           "The contact is unknown to the XMPP server.\n\n"
@@ -108,7 +123,7 @@ class AddContactUtility {
           "Contact unknown to XMPP server.");
     }
 
-    if (e.getMessage().contains("remote-server-not-found")) {
+    if (hasError(e, "remote-server-not-found", NO_CODE)) {
       return new DialogContent(
           "Server Not Found",
           "The responsible XMPP server could not be found.\n\n"
@@ -116,7 +131,7 @@ class AddContactUtility {
           "Unable to find the responsible XMPP server.");
     }
 
-    if (e.getMessage().contains("501")) {
+    if (hasError(e, "feature-not-implemented", 501)) {
       return new DialogContent(
           "Unsupported Contact Status Check",
           "The responsible XMPP server does not support status requests.\n\n"
@@ -125,7 +140,7 @@ class AddContactUtility {
           "Contact status check unsupported by XMPP server.");
     }
 
-    if (e.getMessage().contains("503")) {
+    if (hasError(e, "service-unavailable", 503)) {
       return new DialogContent(
           "Unknown Contact Status",
           "For privacy reasons the XMPP server does not reply to status requests.\n\n"
@@ -134,7 +149,7 @@ class AddContactUtility {
           "Unable to check the contact status.");
     }
 
-    if (e.getMessage().contains("No response from the server")) {
+    if (String.valueOf(e.getMessage()).contains("No response from the server")) {
       return new DialogContent(
           "Server Not Responding",
           "The responsible XMPP server is not connectable.\n"
