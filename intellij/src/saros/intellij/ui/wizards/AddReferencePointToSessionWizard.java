@@ -259,7 +259,8 @@ public class AddReferencePointToSessionWizard extends Wizard {
           }
 
           if (project == null) {
-            project = ProjectUtil.openOrImport(referencePointFile.toNioPath(), null, true);
+            // not forcing a new frame lets IntelliJ ask "This Window" / "New Window" / "Cancel"
+            project = ProjectUtil.openOrImport(referencePointFile.toNioPath(), null, false);
 
             if (project == null) {
               log.error(
