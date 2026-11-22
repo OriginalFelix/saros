@@ -47,8 +47,7 @@ public class XMPPAccountStoreTest {
     store.setAccountFile(accountFile, null);
     store.createAccount("alice", "secret", "example.org", "", 0, true, true);
 
-    assertEquals(
-        PosixFilePermissions.fromString("rw-------"), view.readAttributes().permissions());
+    assertEquals(PosixFilePermissions.fromString("rw-------"), view.readAttributes().permissions());
   }
 
   @Test(expected = IllegalStateException.class)

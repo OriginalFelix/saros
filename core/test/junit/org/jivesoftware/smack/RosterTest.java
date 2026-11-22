@@ -24,7 +24,8 @@ public class RosterTest {
     EasyMock.expect(connection.getUser()).andStubReturn("alice@example.org/Saros");
 
     Capture<PacketListener> listeners = Capture.newInstance(CaptureType.ALL);
-    connection.addPacketListener(EasyMock.capture(listeners), EasyMock.anyObject(PacketFilter.class));
+    connection.addPacketListener(
+        EasyMock.capture(listeners), EasyMock.anyObject(PacketFilter.class));
     EasyMock.expectLastCall().anyTimes();
     EasyMock.replay(connection);
 
