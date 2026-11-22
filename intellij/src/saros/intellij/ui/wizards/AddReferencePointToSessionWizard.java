@@ -197,6 +197,9 @@ public class AddReferencePointToSessionWizard extends Wizard {
             @NotNull String directoryName,
             @NotNull VirtualFile baseDirectory) {
 
+          // the VFS can still list a directory that was deleted outside of IntelliJ
+          baseDirectory.refresh(false, false);
+
           VirtualFile existingResource = baseDirectory.findChild(directoryName);
 
           if (existingResource != null) {
