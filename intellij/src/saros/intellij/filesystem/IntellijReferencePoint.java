@@ -256,7 +256,8 @@ public class IntellijReferencePoint implements IReferencePoint {
 
     if (PathUtils.isEmpty(relativePath)) return virtualFile;
 
-    return virtualFile.findFileByRelativePath(relativePath.toString());
+    // the VFS only understands '/', Path.toString() uses '\' on Windows
+    return virtualFile.findFileByRelativePath(PathUtils.toPortableString(relativePath));
   }
 
   @Override
