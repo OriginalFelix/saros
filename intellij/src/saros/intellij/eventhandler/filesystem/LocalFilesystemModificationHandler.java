@@ -449,7 +449,7 @@ public class LocalFilesystemModificationHandler extends AbstractActivityProducer
 
     Deque<IActivity> queuedDeletionActivities = new ConcurrentLinkedDeque<>();
 
-    VirtualFileFilter virtualFileFilter = getVirtualFileFilter();
+    VirtualFileFilter virtualFileFilter = getVirtualFileFilter(project);
 
     /*
      * Defines the actions executed on the base directory and every valid
@@ -662,7 +662,7 @@ public class LocalFilesystemModificationHandler extends AbstractActivityProducer
 
     Deque<IActivity> queuedDeletionActivities = new ConcurrentLinkedDeque<>();
 
-    VirtualFileFilter virtualFileFilter = getVirtualFileFilter();
+    VirtualFileFilter virtualFileFilter = getVirtualFileFilter(project);
 
     /*
      * Defines the actions executed on the base directory and every valid
@@ -1025,13 +1025,15 @@ public class LocalFilesystemModificationHandler extends AbstractActivityProducer
   /**
    * Returns a filter determining which child resources to iterate over.
    *
-   * <p>The filter only iterates over non-excluded resources.
+   * <p>The filter only iterates over non-excluded resources. IntelliJ skips a resource and its
+   * children when the filter rejects it, so it must accept everything that is not excluded.
    *
+   * @param project the project whose exclusions to respect
    * @return a filter determining which child resources to iterate over
    * @see ProjectAPI#isExcluded(Project, VirtualFile)
    */
-  private VirtualFileFilter getVirtualFileFilter() {
-    return (fileOrDir) -> ProjectAPI.isExcluded(project, fileOrDir);
+  static VirtualFileFilter getVirtualFileFilter(@NotNull Project project) {
+    return fileOrDir -> !ProjectAPI.isExcluded(project, fileOrDir);
   }
 
   /**
