@@ -87,7 +87,8 @@ public class DocumentAPI {
 
   /** Saves all documents in the UI thread. */
   public static void saveAllDocuments() {
-    FilesystemRunner.runWriteAction(fileDocumentManager::saveAllDocuments, ModalityState.nonModal());
+    FilesystemRunner.runWriteAction(
+        fileDocumentManager::saveAllDocuments, ModalityState.nonModal());
   }
 
   /**

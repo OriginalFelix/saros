@@ -251,7 +251,8 @@ class ReferencePointTab {
         null,
         FileChooserDescriptorFactory.createSingleFolderDescriptor()
             .withTitle(Messages.ReferencePointTab_directory_base_path_file_chooser_title)
-            .withDescription(Messages.ReferencePointTab_directory_base_path_file_chooser_description));
+            .withDescription(
+                Messages.ReferencePointTab_directory_base_path_file_chooser_description));
 
     newDirectoryBasePathTextField.setEditable(false);
     newDirectoryBasePathTextField
@@ -261,7 +262,8 @@ class ReferencePointTab {
                 e -> {
                   // only act on left click and filter out events where browse button was clicked
                   if (e.getButton() == MouseEvent.BUTTON1 && e.getComponent().hasFocus()) {
-                    UIUtil.findComponentOfType(newDirectoryBasePathTextField, FixedSizeButton.class).doClick();
+                    UIUtil.findComponentOfType(newDirectoryBasePathTextField, FixedSizeButton.class)
+                        .doClick();
                   }
                 });
 
@@ -269,7 +271,8 @@ class ReferencePointTab {
         null,
         FileChooserDescriptorFactory.createSingleFolderDescriptor()
             .withTitle(Messages.ReferencePointTab_existing_directory_path_file_chooser_title)
-            .withDescription(Messages.ReferencePointTab_existing_directory_path_file_chooser_description));
+            .withDescription(
+                Messages.ReferencePointTab_existing_directory_path_file_chooser_description));
 
     existingDirectoryPathTextField.setEditable(false);
     existingDirectoryPathTextField
@@ -279,7 +282,9 @@ class ReferencePointTab {
                 e -> {
                   // only act on left click and filter out events where browse button was clicked
                   if (e.getButton() == MouseEvent.BUTTON1 && e.getComponent().hasFocus()) {
-                    UIUtil.findComponentOfType(existingDirectoryPathTextField, FixedSizeButton.class).doClick();
+                    UIUtil.findComponentOfType(
+                            existingDirectoryPathTextField, FixedSizeButton.class)
+                        .doClick();
                   }
                 });
   }

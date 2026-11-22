@@ -127,8 +127,7 @@ public class ProjectAPI {
   public static Editor getActiveEditor(@NotNull Project project) {
     FileEditorManager fileEditorManager = getFileEditorManager(project);
 
-    return EDTExecutor.invokeAndWait(
-        (Computable<Editor>) fileEditorManager::getSelectedTextEditor);
+    return EDTExecutor.invokeAndWait((Computable<Editor>) fileEditorManager::getSelectedTextEditor);
   }
 
   /**
