@@ -1,58 +1,32 @@
 plugins {
-  id("saros.gradle.eclipse.plugin")
+    `java-library`
 }
-
-val versionQualifier = ext.get("versionQualifier") as String
 
 val log4j2ApiVersion = ext.get("log4j2ApiVersion") as String
 val log4j2CoreVersion = ext.get("log4j2CoreVersion") as String
 val log4j2BridgeVersion = ext.get("log4j2BridgeVersion") as String
 
-configurations {
-    // Defined in root build.gradle
-    val testConfig by getting {}
-    val releaseDep by getting {}
-
-    // Default configuration
-    val compile by getting {
-        extendsFrom(releaseDep)
-    }
-    val testCompile by getting {
-        extendsFrom(testConfig)
-    }
-    val plain by creating {
-        extendsFrom(compile)
-    }
-}
-
-sarosEclipse {
-    manifest = file("META-INF/MANIFEST.MF")
-    isCreateBundleJar = true
-    isAddPdeNature = true
-    pluginVersionQualifier = versionQualifier
-}
+configurations.named("testImplementation") { extendsFrom(configurations["testConfig"]) }
 
 dependencies {
-    releaseDep("commons-codec:commons-codec:1.3")
-    releaseDep("commons-io:commons-io:2.0.1")
-    releaseDep("org.apache.commons:commons-lang3:3.8.1")
+    api("commons-codec:commons-codec:1.23.0")
+    api("commons-io:commons-io:2.22.0")
+    api("org.apache.commons:commons-lang3:3.22.0")
 
-    releaseDep("javax.jmdns:jmdns:3.4.1")
-    releaseDep("xpp3:xpp3:1.1.4c")
-    releaseDep("com.thoughtworks.xstream:xstream:1.4.19")
-    releaseDep("org.gnu.inet:libidn:1.15")
+    api("xpp3:xpp3:1.1.4c")
+    api("com.thoughtworks.xstream:xstream:1.4.21")
+    api("org.gnu.inet:libidn:1.15")
 
-    releaseDep(log4j2ApiVersion)
-    releaseDep(log4j2CoreVersion)
-    releaseDep(log4j2BridgeVersion)
+    api(log4j2ApiVersion)
+    api(log4j2CoreVersion)
+    api(log4j2BridgeVersion)
 
     // TODO: use real release. This version is a customized SNAPSHOT
-    releaseDep(files("libs/weupnp.jar"))
+    api(files("libs/weupnp.jar"))
     // Workaround until we updated to a newer smack version
-    releaseDep(files("libs/smack-3.4.1.jar"))
-    releaseDep(files("libs/smackx-3.4.1.jar"))
-    // Workaround until we can publish and use (without a user token) the repackaged jar in GitHub Packages
-    releaseDep(rootProject.files("libs/picocontainer-2.11.2-patched_relocated.jar"))
+    api(files("libs/smack-3.4.1.jar"))
+    api(files("libs/smackx-3.4.1.jar"))
+    api(rootProject.files("libs/picocontainer-2.11.2-patched_relocated.jar"))
 }
 
 sourceSets {
@@ -66,24 +40,11 @@ sourceSets {
 }
 
 tasks {
-
     val testJar by registering(Jar::class) {
-        classifier = "tests"
+        archiveClassifier.set("tests")
         from(sourceSets["test"].output)
     }
-
-    // Jar containing only the core code (the default jar is an osgi bundle
-    // containing a lib dir with all dependency jars)
-    val plainJar by registering(Jar::class) {
-        manifest {
-            from("META-INF/MANIFEST.MF")
-        }
-        from(sourceSets["main"].output)
-        classifier = "plain"
-    }
-
     artifacts {
         add("testing", testJar)
-        add("plain", plainJar)
     }
 }

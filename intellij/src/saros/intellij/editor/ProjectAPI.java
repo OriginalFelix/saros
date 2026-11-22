@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.fileEditor.TextEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
@@ -126,7 +127,7 @@ public class ProjectAPI {
   public static Editor getActiveEditor(@NotNull Project project) {
     FileEditorManager fileEditorManager = getFileEditorManager(project);
 
-    return EDTExecutor.invokeAndWait(fileEditorManager::getSelectedTextEditor);
+    return EDTExecutor.invokeAndWait((Computable<Editor>) fileEditorManager::getSelectedTextEditor);
   }
 
   /**

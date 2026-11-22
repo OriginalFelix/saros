@@ -1,7 +1,6 @@
 package saros.intellij.ui.wizards;
 
 import com.intellij.openapi.application.ModalityState;
-import com.intellij.openapi.progress.PerformInBackgroundOption;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -523,8 +522,7 @@ public class AddReferencePointToSessionWizard extends Wizard {
             new Task.Backgroundable(
                 project,
                 Messages.AddReferencePointToSessionWizard_negotiation_progress_title,
-                true,
-                PerformInBackgroundOption.DEAF) {
+                true) {
 
               @Override
               public void run(@NotNull ProgressIndicator indicator) {

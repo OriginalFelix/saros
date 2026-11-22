@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 1
     - uses: m273d15/java-format-action@v1.1
@@ -29,21 +29,22 @@ jobs:
 
     steps:
     # Pre-Build
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 1
-    - name: Set up JDK 11
-      uses: actions/setup-java@v3
+
+    # IntelliJ 2026.3 runs on Java 25
+    - name: Set up JDK 25
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '11'
+        java-version: '25'
+
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v4
 
     - name: Determine short sha
-      id: short-sha
-      run: |
-        short_sha=$(git rev-parse --short=10 $GITHUB_SHA)
-        echo "::set-output name=short_sha::$short_sha"
-        echo "SHORT_SHA=$short_sha" >> $GITHUB_ENV
+      run: echo "SHORT_SHA=$(git rev-parse --short=10 $GITHUB_SHA)" >> $GITHUB_ENV
       shell: 'bash'
 
     # Build
@@ -51,55 +52,24 @@ jobs:
       run: |
         ./gradlew \
           -PskipTestSuites=true \
-          -PuseBuildScan=true \
-          -PaggregateTestResults=true \
           -PversionQualifier=DEV-$SHORT_SHA \
-          -DmaxParallelForks=4 \
           --no-daemon \
-          --parallel \
-          sarosEclipse sarosIntellij sarosServer sarosLsp
+          sarosIntellij
 
     # Post-Build
-    # Success-Case
-    - name: Upload eclipse build
-      uses: actions/upload-artifact@v1
-      if: success() && github.ref == 'refs/heads/master'
-      with:
-        name: saros-eclipse-dev-${{ steps.short-sha.outputs.short_sha }}
-        path: build/distribution/eclipse
-
     - name: Upload intellij build
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       if: success() && github.ref == 'refs/heads/master'
       with:
-        name: saros-intellij-dev-${{ steps.short-sha.outputs.short_sha }}
+        name: saros-intellij-dev-${{ env.SHORT_SHA }}
         path: build/distribution/intellij
 
-    - name: Upload server build
-      uses: actions/upload-artifact@v1
-      if: success() && github.ref == 'refs/heads/master'
-      with:
-        name: saros-server-dev-${{ steps.short-sha.outputs.short_sha }}
-        path: build/distribution/server
-
-    - name: Upload lsp build
-      uses: actions/upload-artifact@v1
-      if: success() && github.ref == 'refs/heads/master'
-      with:
-        name: saros-lsp-dev-${{ steps.short-sha.outputs.short_sha }}
-        path: build/distribution/lsp
-
-    # Failure-Case
-    - name: Check test report
-      id: check-report
-      if: failure()
-      run: |
-        [ -d 'build/reports/allTests' ] && echo "::set-output name=report-exist::true" || echo "::set-output name=report-exist::false"
-      shell: 'bash'
-
     - name: Upload test results
-      uses: actions/upload-artifact@v1
-      if: failure() && steps.check-report.outputs.report-exist == 'true'
+      uses: actions/upload-artifact@v4
+      if: failure()
       with:
         name: test-results-${{ github.sha }}
-        path: build/reports/allTests
+        path: |
+          core/build/reports/tests
+          intellij/build/reports/tests
+        if-no-files-found: ignore
