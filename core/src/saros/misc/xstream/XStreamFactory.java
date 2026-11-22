@@ -52,11 +52,18 @@ public class XStreamFactory {
     // allow default java stuff
     xStream.addPermission(NullPermission.NULL);
     xStream.addPermission(PrimitiveTypePermission.PRIMITIVES);
-    xStream.allowTypeHierarchy(Collection.class);
-    xStream.allowTypeHierarchy(Map.class);
+    // only JDK collections: other Collection/Map types on the IDE classpath can be gadgets
+    xStream.addPermission(XStreamFactory::isJdkCollection);
     xStream.allowTypes(new Class[] {String.class});
 
-    // allow all saros classes
+    // allow all saros classes, but not the third-party code relocated into saros.repackaged
     xStream.allowTypesByWildcard(new String[] {"saros.**"});
+    xStream.denyTypesByWildcard(new String[] {"saros.repackaged.**"});
+  }
+
+  static boolean isJdkCollection(Class<?> type) {
+    return type != null
+        && (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type))
+        && type.getName().startsWith("java.util.");
   }
 }

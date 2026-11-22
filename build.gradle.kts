@@ -8,6 +8,9 @@ idea {
     }
 }
 
+// the libs accessor only exists on the root project, so resolve it outside of subprojects {}
+val testBundles = listOf(libs.bundles.log4j2, libs.bundles.testing)
+
 subprojects {
     apply(plugin = "idea")
     apply(plugin = "java")
@@ -46,8 +49,7 @@ subprojects {
             systemProperty("log4j2.disableJmx", "true")
             // PowerMock and XStream reflect into JDK internals; IntelliJ itself starts with these opens
             jvmArgs(listOf("java.lang", "java.util", "java.util.concurrent", "java.util.concurrent.locks", "java.util.stream", "java.io", "java.lang.reflect", "java.net", "java.text").flatMap { listOf("--add-opens", "java.base/$it=ALL-UNNAMED") })
-            val skipTestSuites: String? by project
-            if (skipTestSuites != null && skipTestSuites.equals("true", true)) {
+            if (providers.gradleProperty("skipTestSuites").getOrElse("false").equals("true", true)) {
                 exclude("**/*TestSuite*")
             }
             // Don't execute abstract test classes
@@ -58,42 +60,12 @@ subprojects {
         }
     }
 
-    val log4j2VersionNr = "2.26.1"
-    val log4j2Api = "org.apache.logging.log4j:log4j-api:$log4j2VersionNr"
-    val log4j2Core = "org.apache.logging.log4j:log4j-core:$log4j2VersionNr"
-    // Bridge that routes log4j calls to log4j2
-    val log4j2Bridge = "org.apache.logging.log4j:log4j-1.2-api:$log4j2VersionNr"
-
-    extra["log4j2ApiVersion"] = log4j2Api
-    extra["log4j2CoreVersion"] = log4j2Core
-    extra["log4j2BridgeVersion"] = log4j2Bridge
-
     dependencies {
-        val testConfig by configurations
-        testConfig(log4j2Api)
-        testConfig(log4j2Core)
-        testConfig(log4j2Bridge)
-        testConfig("junit:junit:4.13.2")
-        testConfig("org.easymock:easymock:5.4.0")
-        testConfig("org.powermock:powermock-core:2.0.9")
-        testConfig("org.powermock:powermock-module-junit4:2.0.9")
-        testConfig("org.powermock:powermock-api-easymock:2.0.9")
-        // Java 25 bytecode support for EasyMock/PowerMock proxies
-        testConfig("net.bytebuddy:byte-buddy:1.17.7")
-        testConfig("net.bytebuddy:byte-buddy-agent:1.17.7")
+        testBundles.forEach { "testConfig"(it) }
     }
-
-    /*
-     * -PintellijHome=<path> (or INTELLIJ_HOME) builds against a local IntelliJ installation.
-     * -PversionQualifier=<qualifier> appends a qualifier to the plugin version.
-     */
-    val intellijHome: String? by project
-    val versionQualifier: String? by project
-    extra["intellijHome"] = intellijHome ?: System.getenv("INTELLIJ_HOME") ?: ""
-    extra["versionQualifier"] = if (versionQualifier.isNullOrBlank()) "" else ".$versionQualifier"
 }
 
-tasks.register("sarosIntellij", Copy::class) {
+tasks.register<Copy>("sarosIntellij") {
     dependsOn(":saros.core:test", ":saros.intellij:test", ":saros.intellij:buildPlugin")
     group = "Build"
     description = "Builds and tests all modules required by Saros for Intellij"

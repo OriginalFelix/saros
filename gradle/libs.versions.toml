@@ -1,0 +1,33 @@
+[versions]
+log4j2 = "2.26.1"
+powermock = "2.0.9"
+bytebuddy = "1.17.7"
+
+[libraries]
+commons-codec = "commons-codec:commons-codec:1.23.0"
+commons-io = "commons-io:commons-io:2.22.0"
+commons-lang3 = "org.apache.commons:commons-lang3:3.22.0"
+xpp3 = "xpp3:xpp3:1.1.4c"
+xstream = "com.thoughtworks.xstream:xstream:1.4.21"
+libidn = "org.gnu.inet:libidn:1.15"
+
+log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j2" }
+log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j2" }
+# bridge that routes log4j 1 calls to log4j2
+log4j-bridge = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j2" }
+
+junit = "junit:junit:4.13.2"
+easymock = "org.easymock:easymock:5.4.0"
+powermock-core = { module = "org.powermock:powermock-core", version.ref = "powermock" }
+powermock-junit4 = { module = "org.powermock:powermock-module-junit4", version.ref = "powermock" }
+powermock-easymock = { module = "org.powermock:powermock-api-easymock", version.ref = "powermock" }
+# Java 25 bytecode support for EasyMock/PowerMock proxies
+bytebuddy = { module = "net.bytebuddy:byte-buddy", version.ref = "bytebuddy" }
+bytebuddy-agent = { module = "net.bytebuddy:byte-buddy-agent", version.ref = "bytebuddy" }
+
+[bundles]
+log4j2 = ["log4j-api", "log4j-core", "log4j-bridge"]
+testing = ["junit", "easymock", "powermock-core", "powermock-junit4", "powermock-easymock", "bytebuddy", "bytebuddy-agent"]
+
+[plugins]
+intellij-platform = { id = "org.jetbrains.intellij.platform", version = "2.20.1" }

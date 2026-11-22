@@ -801,9 +801,20 @@ public class Roster {
   }
 
   /** Listens for all roster packets and processes them. */
+  boolean isValidRosterSender(String from) {
+    if (from == null) return true;
+
+    String user = connection.getUser();
+    return user != null && from.equalsIgnoreCase(StringUtils.parseBareAddress(user));
+  }
+
   private class RosterPacketListener implements PacketListener {
 
     public void processPacket(Packet packet) {
+      // RFC 6121 2.1.6: only the server (no 'from') or our own bare JID may change the roster
+      // (CVE-2014-0364)
+      if (!isValidRosterSender(packet.getFrom())) return;
+
       // Keep a registry of the entries that were added, deleted or
       // updated. An event
       // will be fired for each affected entry

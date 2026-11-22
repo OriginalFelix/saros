@@ -1,5 +1,6 @@
 package saros.intellij.ui.menu;
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import saros.core.ui.util.CollaborationUtils;
 import saros.filesystem.IReferencePoint;
 import saros.intellij.context.SharedIDEContext;
@@ -42,8 +44,14 @@ public class ShareWithUserAction extends AnAction {
     title = user.getName();
   }
 
+  @NotNull
   @Override
-  public void actionPerformed(AnActionEvent event) {
+  public ActionUpdateThread getActionUpdateThread() {
+    return ActionUpdateThread.BGT;
+  }
+
+  @Override
+  public void actionPerformed(@NotNull AnActionEvent event) {
     Project project = event.getProject();
     if (project == null) {
       throw new IllegalStateException(

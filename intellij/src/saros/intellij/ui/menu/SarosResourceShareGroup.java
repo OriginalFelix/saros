@@ -1,6 +1,7 @@
 package saros.intellij.ui.menu;
 
 import com.intellij.openapi.actionSystem.ActionGroup;
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -25,6 +26,13 @@ public class SarosResourceShareGroup extends ActionGroup {
   @Override
   public void actionPerformed(@NotNull AnActionEvent e) {
     // do nothing when menu pops-up
+  }
+
+  /** The children only depend on Saros state and the selected file, which is available on BGT. */
+  @NotNull
+  @Override
+  public ActionUpdateThread getActionUpdateThread() {
+    return ActionUpdateThread.BGT;
   }
 
   @NotNull

@@ -21,9 +21,24 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 1
-    - uses: m273d15/java-format-action@v1.1
+    - name: Set up JDK 25
+      uses: actions/setup-java@v4
       with:
-        version: '1.6'
+        distribution: 'temurin'
+        java-version: '25'
+    # google-java-format 1.6 defines the code style; the all-deps jar bundles its own javac
+    - name: Check formatting
+      run: |
+        curl -sSfL -o "$RUNNER_TEMP/gjf.jar" \
+          https://repo1.maven.org/maven2/com/google/googlejavaformat/google-java-format/1.6/google-java-format-1.6-all-deps.jar
+        echo "73faf7c9b95bffd72933fa24f23760a6b1d18499151cb39a81cda591ceb7a5f4  $RUNNER_TEMP/gjf.jar" | sha256sum -c -
+        unformatted=$(git ls-files -z '*.java' | xargs -0 java -jar "$RUNNER_TEMP/gjf.jar" --dry-run)
+        if [ -n "$unformatted" ]; then
+          echo "::error::Files not formatted with google-java-format 1.6:"
+          echo "$unformatted"
+          exit 1
+        fi
+      shell: 'bash'
 
   build:
     runs-on: ubuntu-latest
@@ -58,12 +73,19 @@ jobs:
           sarosIntellij
 
     # Post-Build
+    # upload-artifact zips the folder itself, so unpack the plugin zip to avoid a zip inside a zip;
+    # the downloaded artifact then installs directly via "Install Plugin from Disk"
+    - name: Unpack plugin for upload
+      if: success() && github.ref == 'refs/heads/master'
+      run: unzip -q build/distribution/intellij/*.zip -d build/plugin-upload
+      shell: 'bash'
+
     - name: Upload intellij build
       uses: actions/upload-artifact@v4
       if: success() && github.ref == 'refs/heads/master'
       with:
         name: saros-intellij-dev-${{ env.SHORT_SHA }}
-        path: build/distribution/intellij
+        path: build/plugin-upload
 
     - name: Upload test results
       uses: actions/upload-artifact@v4

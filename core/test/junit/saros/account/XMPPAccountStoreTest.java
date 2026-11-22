@@ -8,9 +8,13 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Random;
 import org.apache.commons.io.IOUtils;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,6 +34,20 @@ public class XMPPAccountStoreTest {
   @Test
   public void testWithNoAccountFile() {
     assertTrue(store.isEmpty());
+  }
+
+  @Test
+  public void testAccountFileIsOnlyAccessibleByOwner() throws IOException {
+    File accountFile = tmpFolder.newFile("saros_accounts.dat");
+    PosixFileAttributeView view =
+        Files.getFileAttributeView(accountFile.toPath(), PosixFileAttributeView.class);
+    Assume.assumeNotNull(view);
+    view.setPermissions(PosixFilePermissions.fromString("rw-r--r--"));
+
+    store.setAccountFile(accountFile, null);
+    store.createAccount("alice", "secret", "example.org", "", 0, true, true);
+
+    assertEquals(PosixFilePermissions.fromString("rw-------"), view.readAttributes().permissions());
   }
 
   @Test(expected = IllegalStateException.class)

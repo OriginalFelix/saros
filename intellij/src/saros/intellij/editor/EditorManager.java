@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,6 +51,7 @@ import saros.session.ISessionListener;
 import saros.session.SessionEndReason;
 import saros.session.User;
 import saros.synchronize.Blockable;
+import saros.util.CoreUtils;
 
 /** Intellij implementation of the {@link IEditorManager} interface. */
 public class EditorManager extends AbstractActivityProducer implements IEditorManager {
@@ -234,9 +234,9 @@ public class EditorManager extends AbstractActivityProducer implements IEditorMa
                       + " to "
                       + oldEnd
                       + " does not match the given replaced text. Should be '"
-                      + StringEscapeUtils.escapeJava(replacedText)
+                      + CoreUtils.escapeForLog(replacedText)
                       + "', but is '"
-                      + StringEscapeUtils.escapeJava(documentReplacedText)
+                      + CoreUtils.escapeForLog(documentReplacedText)
                       + "'.");
             }
           }

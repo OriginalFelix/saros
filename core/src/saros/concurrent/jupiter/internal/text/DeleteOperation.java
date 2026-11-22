@@ -27,13 +27,12 @@ import com.thoughtworks.xstream.annotations.XStreamConverter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import saros.activities.TextEditActivity;
 import saros.editor.text.TextPosition;
 import saros.filesystem.IFile;
 import saros.misc.xstream.UrlEncodingStringConverter;
 import saros.session.User;
+import saros.util.CoreUtils;
 import saros.util.LineSeparatorNormalizationUtil;
 
 /**
@@ -171,7 +170,7 @@ public class DeleteOperation implements ITextOperation {
         + ", offset delta: "
         + offsetDelta
         + ", text: '"
-        + StringEscapeUtils.escapeJava(StringUtils.abbreviate(replacedText, 150))
+        + CoreUtils.abbreviateForLog(replacedText)
         + "')";
   }
 

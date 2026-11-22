@@ -1,10 +1,13 @@
 package saros.intellij.ui.util;
 
+import com.intellij.ide.BrowserUtil;
 import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationGroupManager;
-import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import saros.SarosPluginContext;
 import saros.intellij.runtime.EDTExecutor;
@@ -15,8 +18,7 @@ public class NotificationPanel {
   private static final Logger log = Logger.getLogger(NotificationPanel.class);
 
   private static final String GROUP_NOTIFICATION_ID = "sarosNotification";
-  private static final NotificationListener.UrlOpeningListener URL_OPENING_LISTENER =
-      new NotificationListener.UrlOpeningListener(false);
+  private static final Pattern LINK = Pattern.compile("<a href=\"([^\"]+)\">([^<]+)</a>");
 
   @Inject private static UIProjectUtils projectUtils;
 
@@ -51,8 +53,15 @@ public class NotificationPanel {
           final Notification notification =
               NotificationGroupManager.getInstance()
                   .getNotificationGroup(GROUP_NOTIFICATION_ID)
-                  .createNotification(title, message, notificationType)
-                  .setListener(URL_OPENING_LISTENER);
+                  .createNotification(title, message, notificationType);
+
+          // links in the content are only clickable with the deprecated NotificationListener
+          Matcher link = LINK.matcher(message);
+          while (link.find()) {
+            String url = link.group(1);
+            notification.addAction(
+                NotificationAction.createSimple(link.group(2), () -> BrowserUtil.browse(url)));
+          }
 
           EDTExecutor.invokeLater(() -> Notifications.Bus.notify(notification, project));
         });

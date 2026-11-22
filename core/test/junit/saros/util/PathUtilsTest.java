@@ -208,6 +208,12 @@ public class PathUtilsTest {
     PathUtils.normalize(path);
   }
 
+  /** On Windows "\foo" is not absolute but still escapes the reference point via its root. */
+  @Test(expected = IllegalArgumentException.class)
+  public void testNormalizeRootRelative() {
+    PathUtils.normalize(Paths.get(java.io.File.separator + "foo"));
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void testNormalizeDanglingParentReference() {
     Path path = Paths.get("..");
