@@ -1,8 +1,7 @@
 package saros.intellij.ui.util;
 
 import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationDisplayType;
-import com.intellij.notification.NotificationGroup;
+import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
@@ -16,8 +15,6 @@ public class NotificationPanel {
   private static final Logger log = Logger.getLogger(NotificationPanel.class);
 
   private static final String GROUP_NOTIFICATION_ID = "sarosNotification";
-  private static final NotificationGroup GROUP_DISPLAY_ID_INFO =
-      new NotificationGroup(GROUP_NOTIFICATION_ID, NotificationDisplayType.BALLOON, true);
   private static final NotificationListener.UrlOpeningListener URL_OPENING_LISTENER =
       new NotificationListener.UrlOpeningListener(false);
 
@@ -52,8 +49,10 @@ public class NotificationPanel {
           log.info("Showing notification - " + notificationType + ": " + title + " - " + message);
 
           final Notification notification =
-              GROUP_DISPLAY_ID_INFO.createNotification(
-                  title, message, notificationType, URL_OPENING_LISTENER);
+              NotificationGroupManager.getInstance()
+                  .getNotificationGroup(GROUP_NOTIFICATION_ID)
+                  .createNotification(title, message, notificationType)
+                  .setListener(URL_OPENING_LISTENER);
 
           EDTExecutor.invokeLater(() -> Notifications.Bus.notify(notification, project));
         });

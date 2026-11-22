@@ -58,3 +58,4 @@ buildSrc/.gradle
 # LSP
 lsp/.classpath
 lsp/build
+.intellijPlatform/

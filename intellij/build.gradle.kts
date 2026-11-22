@@ -1,22 +1,29 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+
 plugins {
-    id("saros.gradle.intellij.plugin")
+    id("org.jetbrains.intellij.platform") version "2.20.1"
 }
 
-val versionQualifier: String? = ext.get("versionQualifier") as String?
-val intellijHome: String? = ext.get("intellijHome") as String?
-val intellijSandboxDir: String? = ext.get("intellijSandboxDir") as String?
+val versionQualifier = ext.get("versionQualifier") as String
+val intellijHome = ext.get("intellijHome") as String
+val pluginVersion = "0.4.0$versionQualifier"
 
-configurations {
-    val testConfig by getting {}
-    val testCompile by getting {
-        extendsFrom(testConfig)
+repositories {
+    intellijPlatform {
+        defaultRepositories()
     }
 }
 
-dependencies {
-    compile(project(path = ":saros.core", configuration = "plain"))
+configurations.named("testImplementation") { extendsFrom(configurations["testConfig"]) }
 
-    testCompile(project(path = ":saros.core", configuration = "testing"))
+dependencies {
+    implementation(project(":saros.core"))
+    testImplementation(project(path = ":saros.core", configuration = "testing"))
+
+    intellijPlatform {
+        if (intellijHome.isNotBlank()) local(intellijHome) else intellijIdea("2026.3")
+        testFramework(TestFrameworkType.Platform)
+    }
 }
 
 sourceSets {
@@ -25,48 +32,40 @@ sourceSets {
         resources.srcDirs("resources", "src")
         resources.exclude("**/*.java")
     }
-
     test {
         java.srcDirs("test/junit")
     }
 }
 
-sarosIntellij {
-    sandboxBaseDir = if (intellijSandboxDir.isNullOrBlank()) null else file(intellijSandboxDir!!)
-    localIntellijHome = if (intellijHome.isNullOrBlank()) null else file(intellijHome!!)
-    intellijVersion = "IC-2020.1.3"
+intellijPlatform {
+    pluginConfiguration {
+        version = pluginVersion
+        ideaVersion {
+            sinceBuild = "263"
+            untilBuild = provider { null }
+        }
+    }
+    buildSearchableOptions = false
+    pluginVerification {
+        ides {
+            if (intellijHome.isNotBlank()) local(file(intellijHome)) else recommended()
+        }
+    }
 }
 
 tasks {
+    processResources {
+        inputs.property("pluginVersion", pluginVersion)
+        filesMatching("saros.properties") { filter { it.replace("@pluginVersion@", pluginVersion) } }
+    }
+
     jar {
-        manifest {
-            attributes(mutableMapOf(
-                    "Created-By" to "IntelliJ IDEA",
-                    "Manifest-Version" to "1.0"
-            ))
-        }
-        version = ""
-
-        from(sourceSets["main"].output)
-
         from(rootProject.file("saros_log4j2.xml"))
         from(rootProject.file("log4j2.xml"))
     }
 
-    intellij {
-        pluginName = "saros-intellij"
-    }
-
     runIde {
-        // set heap size for the test JVM(s)
-        minHeapSize = "128m"
         maxHeapSize = "2048m"
         jvmArgs("-Dsaros.debug=true")
-    }
-
-    intellij {
-        patchPluginXml {
-            setVersion("0.3.0$versionQualifier")
-        }
     }
 }

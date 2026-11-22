@@ -1,4 +1,4 @@
-<idea-plugin url="https://www.saros-project.org">
+<idea-plugin require-restart="true" url="https://www.saros-project.org">
 
   <name>Saros</name>
 
@@ -34,23 +34,16 @@
     Saros Project
   </vendor>
 
-  <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="201.8538.31"/>
-
   <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html on how to target different products -->
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.lang</depends>
 
-  <application-components>
-    <component>
-      <implementation-class>
-        saros.intellij.SarosComponent
-      </implementation-class>
-    </component>
-  </application-components>
+  <applicationListeners>
+    <listener class="saros.intellij.SarosComponent" topic="com.intellij.ide.AppLifecycleListener"/>
+  </applicationListeners>
 
   <actions>
-    <group keep-content="true" compact="false" popup="true"
+    <group compact="false" popup="true"
       id="saros.ShareWith"
       icon="/icons/famfamfam/session_tsk.png" text="_Share With..."
       description="Share this directory using Saros"
@@ -60,6 +53,7 @@
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
+    <notificationGroup id="sarosNotification" displayType="BALLOON"/>
     <toolWindow id="Saros" icon="/icons/saros/saros_misc.png"
       anchor="bottom" secondary="true"
       factoryClass="saros.intellij.ui.SarosToolWindowFactory"/>

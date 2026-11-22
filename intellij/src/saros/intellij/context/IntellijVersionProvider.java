@@ -1,9 +1,6 @@
 package saros.intellij.context;
 
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.application.ApplicationInfo;
-import com.intellij.openapi.extensions.PluginId;
 import saros.intellij.SarosComponent;
 
 /**
@@ -21,15 +18,8 @@ public class IntellijVersionProvider {
    * @return the version number of the used Saros plugin
    */
   public static String getPluginVersion() {
-    IdeaPluginDescriptor sarosPluginDescriptor =
-        PluginManagerCore.getPlugin(PluginId.getId(SarosComponent.PLUGIN_ID));
-
-    if (sarosPluginDescriptor == null) {
-      throw new IllegalStateException(
-          "No plugin with the id \"" + SarosComponent.PLUGIN_ID + "\" was found");
-    }
-
-    return sarosPluginDescriptor.getVersion();
+    // loaded from saros.properties by SarosComponent on startup
+    return System.getProperty("saros.intellij.VERSION");
   }
 
   /**

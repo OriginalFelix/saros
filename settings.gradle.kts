@@ -1,13 +1,13 @@
 plugins {
-    id("com.gradle.enterprise") version "3.3.3"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 /*
- * TODO: Remove superfluous prefix. The previous setup required the prefix
- *       because the osgi bundle names had to match the project names.
+ * Only the modules needed for Saros/IntelliJ are built. The eclipse, server, lsp and stf
+ * modules depended on the removed buildSrc tooling (goomph / Gradle 6) and are not built anymore.
  */
 val prefix = "saros."
-listOf("core", "eclipse", "intellij", "server", "lsp", "stf", "stf.test").forEach { dir ->
+listOf("core", "intellij").forEach { dir ->
     val projectName = prefix + dir
     include(projectName)
     project(":$projectName").projectDir = file(dir)

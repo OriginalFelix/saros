@@ -82,12 +82,12 @@ public class DocumentAPI {
    */
   public static void saveDocument(final Document document) {
     FilesystemRunner.runWriteAction(
-        () -> fileDocumentManager.saveDocument(document), ModalityState.NON_MODAL);
+        () -> fileDocumentManager.saveDocument(document), ModalityState.nonModal());
   }
 
   /** Saves all documents in the UI thread. */
   public static void saveAllDocuments() {
-    FilesystemRunner.runWriteAction(fileDocumentManager::saveAllDocuments, ModalityState.NON_MODAL);
+    FilesystemRunner.runWriteAction(fileDocumentManager::saveAllDocuments, ModalityState.nonModal());
   }
 
   /**

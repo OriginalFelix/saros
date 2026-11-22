@@ -1,5 +1,6 @@
 package saros.intellij;
 
+import com.intellij.ide.AppLifecycleListener;
 import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.keymap.Keymap;
@@ -7,18 +8,20 @@ import com.intellij.openapi.keymap.KeymapManager;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.InputStream;
+import java.util.List;
 import javax.swing.KeyStroke;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.lookup.MainMapLookup;
 import org.apache.logging.log4j.status.StatusLogger;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Component that is initialized when a application is loaded. It initializes the logging, shortcuts
  * and the {@link IntellijApplicationLifecycle} singleton.
  */
-public class SarosComponent {
+public class SarosComponent implements AppLifecycleListener {
 
   /**
    * This is the plugin ID that identifies the saros plugin in the IDEA ecosystem. It is set in
@@ -28,7 +31,8 @@ public class SarosComponent {
 
   private static final String LOG4J2_CONFIG_FILENAME = "saros_log4j2.xml";
 
-  public SarosComponent() {
+  @Override
+  public void appFrameCreated(@NotNull List<String> commandLineArgs) {
     setupLoggers();
 
     Keymap keymap = KeymapManager.getInstance().getActiveKeymap();

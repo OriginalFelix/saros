@@ -9,7 +9,9 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.ui.FixedSizeButton;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.util.ui.UIUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.JBColor;
@@ -246,10 +248,10 @@ class ReferencePointTab {
    */
   private void setUpFolderChooser() {
     newDirectoryBasePathTextField.addBrowseFolderListener(
-        Messages.ReferencePointTab_directory_base_path_file_chooser_title,
-        Messages.ReferencePointTab_directory_base_path_file_chooser_description,
         null,
-        FileChooserDescriptorFactory.createSingleFolderDescriptor());
+        FileChooserDescriptorFactory.createSingleFolderDescriptor()
+            .withTitle(Messages.ReferencePointTab_directory_base_path_file_chooser_title)
+            .withDescription(Messages.ReferencePointTab_directory_base_path_file_chooser_description));
 
     newDirectoryBasePathTextField.setEditable(false);
     newDirectoryBasePathTextField
@@ -259,15 +261,15 @@ class ReferencePointTab {
                 e -> {
                   // only act on left click and filter out events where browse button was clicked
                   if (e.getButton() == MouseEvent.BUTTON1 && e.getComponent().hasFocus()) {
-                    newDirectoryBasePathTextField.getButton().doClick();
+                    UIUtil.findComponentOfType(newDirectoryBasePathTextField, FixedSizeButton.class).doClick();
                   }
                 });
 
     existingDirectoryPathTextField.addBrowseFolderListener(
-        Messages.ReferencePointTab_existing_directory_path_file_chooser_title,
-        Messages.ReferencePointTab_existing_directory_path_file_chooser_description,
         null,
-        FileChooserDescriptorFactory.createSingleFolderDescriptor());
+        FileChooserDescriptorFactory.createSingleFolderDescriptor()
+            .withTitle(Messages.ReferencePointTab_existing_directory_path_file_chooser_title)
+            .withDescription(Messages.ReferencePointTab_existing_directory_path_file_chooser_description));
 
     existingDirectoryPathTextField.setEditable(false);
     existingDirectoryPathTextField
@@ -277,7 +279,7 @@ class ReferencePointTab {
                 e -> {
                   // only act on left click and filter out events where browse button was clicked
                   if (e.getButton() == MouseEvent.BUTTON1 && e.getComponent().hasFocus()) {
-                    existingDirectoryPathTextField.getButton().doClick();
+                    UIUtil.findComponentOfType(existingDirectoryPathTextField, FixedSizeButton.class).doClick();
                   }
                 });
   }
